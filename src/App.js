@@ -100,14 +100,17 @@ const query = "Interstellar";
 export default function App() {
   const [movies, setMovies] = useState([]);
   const [watched, setWatched] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(function () {
     async function FetchMovies() {
+      setIsLoading(true);
       const promise = await fetch(
         `http://www.omdbapi.com/?apikey=${key}&s=${query}`
       );
       const data = await promise.json();
       setMovies(data.Search);
+      setIsLoading(false);
     }
     FetchMovies();
   }, []);
@@ -119,9 +122,7 @@ export default function App() {
         <NumResults movies={movies} />
       </NavBar>
       <Main>
-        <Box>
-          <MovieList movies={movies} />
-        </Box>
+        <Box>{isLoading ? <Loader /> : <MovieList movies={movies} />}</Box>
         <Box>
           <WatchedSummary watched={watched} />
           <WatchedMovieList watched={watched} />
@@ -231,6 +232,10 @@ function WatchedMovieList({ watched }) {
       ))}
     </ul>
   );
+}
+
+function Loader() {
+  return <p className="loader">Loading...</p>;
 }
 
 function WatchedMovie({ movie }) {
