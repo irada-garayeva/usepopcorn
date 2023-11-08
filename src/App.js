@@ -50,6 +50,65 @@ const tempWatchedData = [
 const average = (arr) =>
   arr.reduce((acc, cur, i, arr) => acc + cur / arr.length, 0);
 
+const key = "88a594e0";
+const tempQuery = "Interstellar";
+
+export default function App() {
+  const [query, setQuery] = useState("");
+  const [movies, setMovies] = useState([]);
+  const [watched, setWatched] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  useEffect(
+    function () {
+      async function FetchMovies() {
+        try {
+          setIsLoading(true);
+          setError("");
+          const res = await fetch(
+            `http://www.omdbapi.com/?apikey=${key}&s=${query}`
+          );
+          const data = await res.json();
+          if (data.Response === "False") throw new Error("Movie not found");
+          setMovies(data.Search);
+        } catch (error) {
+          setError(error.message);
+        } finally {
+          setIsLoading(false);
+        }
+      }
+      if (query.length < 3) {
+        setMovies([]);
+        setError("");
+        return;
+      }
+      FetchMovies();
+    },
+    [query]
+  );
+
+  return (
+    <>
+      <NavBar>
+        <Search query={query} setQuery={setQuery} />
+        <NumResults movies={movies} />
+      </NavBar>
+      <Main>
+        <Box>
+          {isLoading && <Loader />}
+          {!isLoading && !error && <MovieList movies={movies} />}
+          {error && <ErrorMessage message={error} />}
+        </Box>
+        <Box>
+          <WatchedSummary watched={watched} />
+          <WatchedMovieList watched={watched} />
+        </Box>
+      </Main>
+    </>
+  );
+}
+
 function NavBar({ children }) {
   return (
     <nav className="nav-bar">
@@ -68,20 +127,6 @@ function Logo() {
   );
 }
 
-function Search() {
-  const [query, setQuery] = useState("");
-
-  return (
-    <input
-      className="search"
-      type="text"
-      placeholder="Search movies..."
-      value={query}
-      onChange={(e) => setQuery(e.target.value)}
-    />
-  );
-}
-
 function NumResults({ movies }) {
   return (
     <p className="num-results">
@@ -92,59 +137,6 @@ function NumResults({ movies }) {
 
 function Main({ children }) {
   return <main className="main">{children}</main>;
-}
-
-const key = "88a594e0";
-const query = "Interstellar";
-
-export default function App() {
-  const [movies, setMovies] = useState([]);
-  const [watched, setWatched] = useState([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState("");
-
-  useEffect(function () {
-    async function FetchMovies() {
-      try {
-        setIsLoading(true);
-        const res = await fetch(
-          `http://www.omdbapi.com/?apikey=${key}&s=${query}`
-        );
-        const data = await res.json();
-        if (data.Response === "False") throw new Error("Movie not found");
-        setMovies(data.Search);
-      } catch (error) {
-        setError(error.message);
-      } finally {
-        setIsLoading(false);
-      }
-    }
-    FetchMovies();
-  }, []);
-
-  return (
-    <>
-      <NavBar>
-        <Search />
-        <NumResults movies={movies} />
-      </NavBar>
-      <Main>
-        <Box>
-          {isLoading ? (
-            <Loader />
-          ) : error ? (
-            <ErrorMessage message={error} />
-          ) : (
-            <MovieList movies={movies} />
-          )}
-        </Box>
-        <Box>
-          <WatchedSummary watched={watched} />
-          <WatchedMovieList watched={watched} />
-        </Box>
-      </Main>
-    </>
-  );
 }
 
 function Box({ children }) {
@@ -255,6 +247,18 @@ function Loader() {
 
 function ErrorMessage({ message }) {
   return <p className="error">⛔ {message}</p>;
+}
+
+function Search({ query, setQuery }) {
+  return (
+    <input
+      className="search"
+      type="text"
+      placeholder="Search movies..."
+      value={query}
+      onChange={(e) => setQuery(e.target.value)}
+    />
+  );
 }
 
 function WatchedMovie({ movie }) {
