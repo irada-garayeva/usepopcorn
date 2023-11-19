@@ -55,7 +55,7 @@ const key = "88a594e0";
 const tempQuery = "Interstellar";
 
 export default function App() {
-  const [query, setQuery] = useState("matrix");
+  const [query, setQuery] = useState("");
   const [movies, setMovies] = useState([]);
   const [watched, setWatched] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -105,6 +105,8 @@ export default function App() {
         return;
       }
       FetchMovies();
+      handleCloseMovie();
+
       return function () {
         controller.abort();
       };
@@ -283,6 +285,19 @@ function MovieDetails({ selectedId, watched, onCloseMovie, onAddWatched }) {
     [title]
   );
 
+  useEffect(
+    function () {
+      function callback(e) {
+        if (e.code === "Escape") onCloseMovie();
+      }
+      document.addEventListener("keydown", callback);
+
+      return function () {
+        document.removeEventListener("keydown", callback);
+      };
+    },
+    [onCloseMovie]
+  );
   return (
     <div className="details">
       {isLoading ? (
